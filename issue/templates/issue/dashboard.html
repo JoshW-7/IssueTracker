@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+{% if request.user.is_authenticated %}
+<div>
+    <div style="text-align: center;"><u>Assigned to You</u></div>
+    <div id="user-issues">
+        <div style="height: 10px;"></div>
+        {% for issue in issues %}
+            {% if issue.user.username == request.user.username and issue.status.name == 'Open'%}
+            <div class="issue {{ issue.status.name.lower }}" id="issue-{{ issue.id }}" issue-user={{ issue.user }} onclick="gotoIssue('{{ issue.id }}')">
+                <div class="issue-id">{{ issue.id }}</div>
+                <div class="issue-title" >{% if issue.project %}<b>{{ issue.project.name }} : </b>{% endif %} {{ issue.title }}</div>
+                <div class="filler"></div>
+                <div class="issue-tags">{{ issue.tag_list }}</div>
+            </div>
+            <div style="height: 10px;"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+<div>
+    <div style="text-align: center;"><u>Open Issues</u></div>
+    <div id="all-issues">
+        <div style="height: 10px;"></div>
+        {% for issue in issues %}
+            {% if issue.status.name == 'Open' %}
+            <div class="issue {{ issue.status.name.lower }}" id="issue-{{ issue.id }}" issue-user={{ issue.user }} onclick="gotoIssue('{{ issue.id }}')">
+                <div class="issue-id">{{ issue.id }}</div>
+                <div class="issue-title">{% if issue.project %}<b>{{ issue.project.name }} : </b>{% endif %} {{ issue.title }}</div>
+                <div class="filler"></div>
+                <div class="issue-tags">{{ issue.tag_list }}</div>
+            </div>
+            <div style="height: 10px;"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div style="text-align: center;"><u>Resolved Issues</u></div>
+    <div id="all-issues">
+        <div style="height: 10px;"></div>
+        {% for issue in issues %}
+            {% if issue.status.name == 'Resolved' %}
+            <div class="issue {{ issue.status.name.lower }}" id="issue-{{ issue.id }}" issue-user={{ issue.user }} onclick="gotoIssue('{{ issue.id }}')">
+                <div class="issue-id">{{ issue.id }}</div>
+                <div class="issue-title">{% if issue.project %}<b>{{ issue.project.name }} : </b>{% endif %} {{ issue.title }}</div>
+                <div class="filler"></div>
+                <div class="issue-tags">{{ issue.tag_list }}</div>
+            </div>
+            <div style="height: 10px;"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<script type="text/javascript">
+    let view_data = {{ view_data|safe }};
+</script>
+
+<script>
+    function gotoIssue(issueId) {
+        window.location.href = "/issue/" + issueId;
+    }
+</script>
+{% endblock %}
+

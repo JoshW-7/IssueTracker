@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="issue-container">
+    <form method="POST"> {% csrf_token %}
+        <span>Name</span>
+        <div class="issue-attribute">{{ form.name }}</div>
+        <div style="float: right"><button type="submit" style="height: 26px; width: 100px; margin-right: 5px;">Create</button></div>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,85 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div id="modal-confirm" class="modal">
+    <div class="modal-content">
+        <div class="filler"></div>
+        <div style="margin: 8px 0px 0px 5px;">Are you sure you want to completely delete this project?</div>
+        <div><button id="btn-confirm" onclick="deleteProject()" style="height: 26px; margin: 8px 5px 0px 5px;">Delete</button></div>
+        <div><button id="btn-confirm" onclick="exitConfirmDelete()" style="height: 26px; margin: 8px 5px 0px 5px;">Cancel</button></div>
+    </div>
+</div>
+
+<div style="display: flex; flex-direction: column;">
+    <div style="text-align: center; margin-bottom: 10px;"><u>Project Detail</u></div>
+    <div class="issue-container" id="project-view" style="display: flex;">
+        <div><b>Name:</b> {{ project.name }}</div>
+    </div>
+    <div class="issue-container" id="project-edit" style="display: none;">
+        <form method="POST"> {% csrf_token %}
+            <input name="form" value="edit-project" type="text" hidden/>
+            <span>Name</span>
+            <div class="issue-attribute">{{ form.name }}</div>
+            <div style="float: right"><button type="submit" style="height: 26px; width: 100px; margin-right: 5px;">Save</button></div>
+        </form>
+    </div>
+    <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <button id="btn-edit-project" onclick="toggleEdit()" style="height: 26px; margin-right: 5px;">Edit</button>
+        <button id="btn-delete-project" onclick="confirmDelete()" style="height: 26px;">Delete</button>
+    </div>
+</div>
+
+<script>
+
+    function toggleEdit() {
+        viewDiv = document.getElementById("project-view");
+        editDiv = document.getElementById("project-edit");
+        button = document.getElementById("btn-edit-project");
+
+        if (viewDiv.style.display == "flex") {
+            viewDiv.style.display = "none";
+            editDiv.style.display = "flex";
+            button.innerText = "Cancel";
+        }
+        else {
+            viewDiv.style.display = "flex";
+            editDiv.style.display = "none";
+            button.innerText = "Edit";
+        }
+    }
+
+    var modal = document.getElementById("modal-confirm");
+
+    function exitConfirmDelete() {
+        modal.style.display = "none";
+    }
+
+    function deleteProject() {
+        $.ajax({
+            type: "POST",
+            data: {
+                "csrfmiddlewaretoken": '{{ csrf_token }}',
+                "form": "delete-project",
+            },
+            success: function(data){
+                window.location.href = "/"
+            },
+            failure: function(data){
+                console.log("failure");
+            },
+        });
+    }
+
+    function confirmDelete() {
+        modal.style.display = "block";
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    }
+</script>
+
+{% endblock %}
+

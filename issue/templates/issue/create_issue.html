@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="issue-container">
+    <form method="POST"> {% csrf_token %}
+        <span>Title</span>
+        <div class="issue-attribute">{{ form.title }}</div>
+        <span>Description</span>
+        <div class="issue-attribute">{{ form.description }}</div>
+        <span>Project</span>
+        <div class="issue-attribute">{{ form.project }}</div>
+        <span>Tags</span>
+        <div class="issue-attribute">{{ form.tags }}</div>
+        <span>Assign To</span>
+        <div class="issue-attribute">{{ form.user }}</div>
+        <div style="float: right"><button type="submit" style="height: 26px; width: 100px; margin-right: 5px;">Create</button></div>
+    </form>
+</div>
+{% endblock %}
+

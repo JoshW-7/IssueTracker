@@ -1,0 +1,180 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div id="modal-confirm" class="modal">
+    <div class="modal-content">
+        <div class="filler"></div>
+        <div style="margin: 8px 0px 0px 5px;">Are you sure you want to completely delete this issue?</div>
+        <div><button id="btn-confirm" onclick="deleteIssue()" style="height: 26px; margin: 8px 5px 0px 5px;">Delete</button></div>
+    </div>
+</div>
+
+<div style="display: flex; flex-direction: column;">
+    <div style="text-align: center; margin-bottom: 10px;"><u>Issue Detail</u></div>
+    <div class="issue-container {{ issue.status.name.lower }}" id="issue-view" style="display: flex;">
+        <div style="text-align: right">{{ issue.id }}</div>
+        <div><b>Status:</b> {{ issue.status }}</div>
+        <div style="position: absolute; "><b>Project:</b> {{ issue.project }}</div>
+        <div><b>Title:</b> {{ issue.title }}</div>
+        <div><b>Description:</b></div>
+        <div class="markdown" style="margin-left: 5px;">{{ issue.description }}</div>
+        <div><b>Assigned:</b> {{ issue.user }}</div>
+        <div style="text-align: right;">{{ issue.tag_list }}</div>
+    </div>
+    <div class="issue-container {{ issue.status.name.lower }}" id="issue-edit" style="display: none;">
+        <form method="POST"> {% csrf_token %}
+            <input name="action" value="edit-issue" type="text" hidden/>
+            <span>Project</span>
+            <div class="issue-attribute">{{ form.project }}</div>
+            <span>Status</span>
+            <div class="issue-attribute">{{ form.status }}</div>
+            <span>Title</span>
+            <div class="issue-attribute">{{ form.title }}</div>
+            <span>Description</span>
+            <div class="issue-attribute">{{ form.description }}</div>
+            <span>Tags</span>
+            <div class="issue-attribute">{{ form.tags }}</div>
+            <span>Assign To</span>
+            <div class="issue-attribute">{{ form.user }}</div>
+            <div style="float: right"><button type="submit" style="height: 26px; width: 100px; margin-right: 5px;">Save</button></div>
+        </form>
+    </div>
+    <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <button id="btn-edit-issue" onclick="toggleEdit()" style="height: 26px; margin-right: 5px;">Edit</button>
+        <button id="btn-delete-issue" onclick="confirmDelete()" style="height: 26px;">Delete</button>
+    </div>
+    <div style="text-align: center; margin-bottom: 10px;"><u>Comments</u></div>
+    <div class="comment-box">
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-header">
+                <div>{{ comment.username }}</div>
+                <div class="filler"></div>
+                <div>{{ comment.created }}</div>
+                {% if request.user.username == comment.username or request.user.is_superuser %}
+                <div>
+                    <form method="POST"> {% csrf_token %}
+                        <input name="action" value="delete-comment" type="text" hidden/>
+                        <input name="comment-id" value="{{ comment.id }}" tyle="text" hidden/>
+                        <button type="submit" style="height: 26px; margin-left: 5px;">X</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            <p class="markdown" style="margin-top: 0px;">{{ comment.text }}</p>
+        </div>
+        <br>
+        {% endfor %}
+        {% if issue.status.name != 'Resolved' %}
+        <form method="POST"> {% csrf_token %}
+            {{ comment_form.text }}
+            <div style="display: flex; flex-direction: row; justify-content: flex-end;">
+                <input name="action" value="create-comment" type="text" hidden/>
+                <button type="submit" style="height: 26px;">Submit</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    <div style="margin-bottom: 300px;"></div>
+</div>
+<div style="display: flex; flex-direction: column;">
+    <div style="text-align: center; margin-bottom: 10px;"><u>Relations</u></div>
+    {% for relation in relations %}
+        <div class="issue {{ relation.status.name.lower }}" id="issue-{{ issue.id }}" issue-user={{ issue.user }} onclick="gotoIssue('{{ relation.id }}')">
+            <div class="issue-id">{{ relation.id }}</div>
+            <div class="issue-title">{% if relation.project %}<b>{{ relation.project.name }} : </b>{% endif %} {{ relation.title }}</div>
+            <div class="filler"></div>
+            <div class="issue-tags">{{ relation.tag_list }}</div>
+            <div style="margin-left: 5px;">
+                <form method="POST"> {% csrf_token %}
+                    <input name="action" value="remove-relation" type="text" hidden/>
+                    <input name="relation-id" value="{{ relation.id }}" tyle="text" hidden/>
+                    <button type="submit" style="height: 26px;">X</button>
+                </form>
+            </div>
+        </div>
+        
+        <div style="height: 10px;"></div>
+    {% endfor %}
+    <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <form method="POST"> {% csrf_token %}
+            <input name="action" value="create-relation" type="text" hidden/>
+            <input name="issue-id" type="text" style="height: 20px; width: 60px;" placeholder="Issue #"/>
+            <button type="submit" style="height: 26px;">Create Relation</button>
+        </form>
+    </div>
+    <div style="text-align: center; margin-bottom: 10px;"><u>Files</u></div>
+    {% for file in issue.files.all %}
+        <div class="file-container">
+            <a href="{{ file.file.url }}">{{ file.filename }}</a>
+            <div class="filler"></div>
+            <form method="POST"> {% csrf_token %}
+                <input name="action" value="delete-file" type="text" hidden/>
+                <input name="file-id" value="{{ file.id }}" tyle="text" hidden/>
+                <button type="submit" style="height: 26px;">X</button>
+            </form>
+        </div>
+        <div style="height: 10px;"></div>
+    {% endfor %}
+    <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <form method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input name="action" value="upload-file" type="text" hidden/>
+            <input type="file" name="file">
+            <button type="submit" style="height: 26px;">Upload File</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function gotoIssue(issueId) {
+        window.location.href = "/issue/" + issueId;
+    }
+
+    function toggleEdit() {
+        viewDiv = document.getElementById("issue-view");
+        editDiv = document.getElementById("issue-edit");
+        button = document.getElementById("btn-edit-issue");
+
+        if (viewDiv.style.display == "flex") {
+            viewDiv.style.display = "none";
+            editDiv.style.display = "flex";
+            button.innerText = "Cancel";
+        }
+        else {
+            viewDiv.style.display = "flex";
+            editDiv.style.display = "none";
+            button.innerText = "Edit";
+        }
+    }
+
+    var modal = document.getElementById("modal-confirm");
+
+    function deleteIssue() {
+        $.ajax({
+            type: "POST",
+            data: {
+                "csrfmiddlewaretoken": '{{ csrf_token }}',
+                "action": "delete-issue",
+            },
+            success: function(data){
+                window.location.href = "/"
+            },
+            failure: function(data){
+                console.log("failure");
+            },
+        });
+    }
+
+    function confirmDelete() {
+        modal.style.display = "block";
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    }
+</script>
+
+{% endblock %}
+
